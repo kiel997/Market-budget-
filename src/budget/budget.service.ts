@@ -1,56 +1,76 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Budget, BudgetDocument } from './schema/budget.schema';
-import { Item } from './schema/item.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Budget } from './entity/budget.entity';
+import { Item } from './entity/item.entity';
 import { AddItemDto } from './Dto/add-item.dto';
 
 @Injectable()
 export class BudgetService {
   constructor(
-    @InjectModel(Budget.name) private budgetModel: Model<BudgetDocument>,
+    @InjectRepository(Budget)
+    private budgetRepository: Repository<Budget>,
+
+    @InjectRepository(Item)
+    private itemRepository: Repository<Item>,
   ) {}
 
   // Create a new budget
-  async createBudget(title: string, totalBudget: number) {
-    return this.budgetModel.create({ title, totalBudget });
+  async createBudget(title: string, totalBudget: number): Promise<Budget> {
+    const budget = this.budgetRepository.create({
+      title,
+      totalBudget,
+      totalSpent: 0,
+      remaining: totalBudget,
+      isExceeded: false,
+      items: [],
+    });
+    return this.budgetRepository.save(budget);
   }
 
   // Add an item to a budget
-  async addItem(budgetId: string, dto: AddItemDto) {
-    const budget = await this.budgetModel.findById(budgetId).exec();
+  async addItem(budgetId: number, dto: AddItemDto) {
+    const budget = await this.budgetRepository.findOne({
+      where: { id: budgetId },
+      relations: ['items'],
+    });
     if (!budget) throw new NotFoundException('Budget not found');
 
     const totalPrice = dto.price * dto.quantity;
 
-    // ✅ Push new item
-    budget.items.push({
+    const item = this.itemRepository.create({
       name: dto.name,
       quantity: dto.quantity,
       unitPrice: dto.price,
-      totalPrice,
-    } as Item); // type assertion
+      totalPrice: totalPrice,
+      category: dto.category,
+      budget: budget,
+    });
 
-    // ✅ Recalculate totals
-    budget.totalSpent = budget.items.reduce(
-      (sum, item) => sum + item.totalPrice,
-      0,
-    );
+    await this.itemRepository.save(item);
 
-    budget.isExceeded = budget.totalSpent > budget.totalBudget;
-    budget.remaining = budget.totalBudget - budget.totalSpent;
+    // Recalculate totals
+    const updatedItems = [...budget.items, item];
+    const totalSpent = updatedItems.reduce((sum, i) => sum + Number(i.totalPrice), 0);
 
-    await budget.save();
+    budget.totalSpent = totalSpent;
+    budget.isExceeded = totalSpent > budget.totalBudget;
+    budget.remaining = budget.totalBudget - totalSpent;
+
+    await this.budgetRepository.save(budget);
 
     return {
-      item: { ...dto, total: totalPrice },
+      item,
       budgetSummary: budget,
     };
   }
 
   // Get budget summary
-  async getBudgetSummary(id: string) {
-    const budget = await this.budgetModel.findById(id).exec();
+  async getBudgetSummary(id: number) {
+    const budget = await this.budgetRepository.findOne({
+      where: { id },
+      relations: ['items'],
+    });
     if (!budget) throw new NotFoundException('Budget not found');
     return budget;
   }
