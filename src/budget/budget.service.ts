@@ -15,7 +15,7 @@ export class BudgetService {
     private itemRepository: Repository<Item>,
   ) {}
 
-  // Create a new budget
+ 
   async createBudget(title: string, totalBudget: number): Promise<Budget> {
     const budget = this.budgetRepository.create({
       title,
@@ -28,8 +28,8 @@ export class BudgetService {
     return this.budgetRepository.save(budget);
   }
 
-  // Add an item to a budget
-  async addItem(budgetId: number, dto: AddItemDto) {
+  
+  async addItem(budgetId: string, dto: AddItemDto) {
     const budget = await this.budgetRepository.findOne({
       where: { id: budgetId },
       relations: ['items'],
@@ -49,7 +49,7 @@ export class BudgetService {
 
     await this.itemRepository.save(item);
 
-    // Recalculate totals
+    
     const updatedItems = [...budget.items, item];
     const totalSpent = updatedItems.reduce((sum, i) => sum + Number(i.totalPrice), 0);
 
@@ -65,10 +65,10 @@ export class BudgetService {
     };
   }
 
-  // Get budget summary
-  async getBudgetSummary(id: number) {
+  
+  async getBudgetSummary(id: string) {
     const budget = await this.budgetRepository.findOne({
-      where: { id },
+      where: { id }, 
       relations: ['items'],
     });
     if (!budget) throw new NotFoundException('Budget not found');

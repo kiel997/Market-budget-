@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { BudgetModule } from './budget/budget.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './Users/users.module';
 
 @Module({
   imports: [
@@ -21,8 +23,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
 
     BudgetModule,
+
+    AuthModule,
+
+    UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ],
 })
 export class AppModule {}

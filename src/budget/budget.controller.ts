@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, Get, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get } from '@nestjs/common';
 import { BudgetService } from './budget.service';
 import { CreateBudgetDto } from './Dto/create-budget.dto';
 import { AddItemDto } from './Dto/add-item.dto';
@@ -16,7 +16,7 @@ export class BudgetController {
   
   @Post(':id/item')
   addItem(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() dto: AddItemDto,
   ) {
     return this.budgetService.addItem(id, dto);
@@ -24,7 +24,7 @@ export class BudgetController {
 
   
   @Get(':id')
-  getSummary(@Param('id', ParseIntPipe) id: number) {
+  getSummary(@Param('id') id: string) { 
     return this.budgetService.getBudgetSummary(id);
   }
 }

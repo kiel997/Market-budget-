@@ -3,8 +3,8 @@ import { Item } from './item.entity';
 
 @Entity('budgets')
 export class Budget {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   title: string;

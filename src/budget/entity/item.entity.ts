@@ -3,8 +3,8 @@ import { Budget } from './budget.entity';
 
 @Entity('items')
 export class Item {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -16,7 +16,7 @@ export class Item {
   unitPrice: number;
 
   @Column('decimal')
-  totalPrice: number; // ✅ must match service
+  totalPrice: number; 
 
   @Column({ nullable: true })
   category?: string;
