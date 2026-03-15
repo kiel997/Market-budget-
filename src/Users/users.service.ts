@@ -44,29 +44,49 @@ export class UsersService {
 
   // GET ALL USERS
   async findAll() {
-    return this.userRepository.find({
-      select: ['id', 'email', 'createdAt'],
-    });
+    const users = await this.userRepository.find();
+
+    return users.map(({ password, ...rest }) => rest);
   }
 
   // GET USER BY ID
-  async findOne(id: string) {
+  async findOneById(id: string) {
     const user = await this.userRepository.findOne({
       where: { id },
-      select: ['id', 'email', 'createdAt'],
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return user;
+    const { password, ...result } = user;
+
+    return result;
+  }
+
+  // DELETE USER
+  async removeById(id: string) {
+    const result = await this.userRepository.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return { message: `User with ID ${id} deleted` };
   }
 
   // FIND USER BY EMAIL
   async findByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { email },
+      select: [
+        'id',
+        'email',
+        'password',
+        'resetOtp',
+        'resetOtpExpires',
+        'createdAt',
+      ],
     });
 
     if (!user) {
@@ -76,20 +96,22 @@ export class UsersService {
     return user;
   }
 
-  // DELETE USER
-  async remove(id: string) {
+  // SAVE USER (used by AuthService)
+  async save(user: User): Promise<User> {
+    return this.userRepository.save(user);
+  }
+
+  // FIND USER WITH PASSWORD (for change password)
+  async findByIdWithPassword(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
+      select: ['id', 'email', 'password'],
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    await this.userRepository.delete(id);
-
-    return {
-      message: 'User deleted successfully',
-    };
+    return user;
   }
 }
