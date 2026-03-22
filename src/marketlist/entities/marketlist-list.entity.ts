@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { GroceryItem } from './grocery-item.entity';
+import { MarketListItem} from './marketlist-item.entity';
 
 @Entity()
-export class GroceryList {
+export class MarketList {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
@@ -18,6 +18,6 @@ export class GroceryList {
   @Column({ type: 'decimal', default: 0 })
   estimatedTotal: number;
 
-  @OneToMany(() => GroceryItem, (item) => item.list, { cascade: true })
-  items: GroceryItem[];
+  @OneToMany(() => MarketListItem, (item) => item.list, { cascade: true })
+  items: MarketListItem[];
 }

@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { BudgetModule } from './budget/budget.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './Users/users.module';
 import { MailModule } from './mail/mail.module';
-import { GroceryModule } from './grocery/grocery.module';
+import { MarketlistModule } from './marketlist/marketlist.module';
 
 @Module({
   imports: [
@@ -24,11 +23,11 @@ import { GroceryModule } from './grocery/grocery.module';
       synchronize: true,
     }),
 
-    BudgetModule,
+    
     AuthModule,
     UsersModule,
     MailModule,
-    GroceryModule, 
+    MarketlistModule, 
   ],
   controllers: [AppController], 
   providers: [AppService], 

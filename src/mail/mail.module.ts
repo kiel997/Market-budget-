@@ -3,6 +3,6 @@ import { MailService } from './mail.service';
 
 @Module({
   providers: [MailService],
-  exports: [MailService], // export so OTP module can use it
+  exports: [MailService], 
 })
 export class MailModule {}

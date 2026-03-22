@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { GroceryList } from './grocery-list.entity';
+import { MarketList } from './marketlist-list.entity';
 
 @Entity()
-export class GroceryItem {
+export class MarketListItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -18,8 +18,8 @@ export class GroceryItem {
   @Column('decimal')
   price: number;
 
-  @ManyToOne(() => GroceryList, (list) => list.items, {
+  @ManyToOne(() => MarketList, (list) => list.items, {
     onDelete: 'CASCADE',
   })
-  list: GroceryList;
+  list: MarketList;
 }

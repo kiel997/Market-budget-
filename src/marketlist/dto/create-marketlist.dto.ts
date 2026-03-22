@@ -5,7 +5,7 @@ export class CreateItemDto {
   price: number;
 }
 
-export class CreateGroceryDto {
+export class CreateMarketlistDto {
   name: string;
   template?: string;
   stealthMode?: boolean;

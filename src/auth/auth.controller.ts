@@ -50,7 +50,7 @@ export class AuthController {
     @Req() req: AuthenticatedRequest, 
     @Body() body: { newPassword: string; oldPassword?: string },
   ) {
-    const userId = req.user['sub']; // JWT payload contains userId in 'sub'
+    const userId = req.user['sub']; 
     return this.authService.changePassword(
       userId,
       body.newPassword,
