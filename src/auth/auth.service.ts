@@ -1,4 +1,9 @@
-import {Injectable,UnauthorizedException,NotFoundException,BadRequestException,} from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UsersService } from '../Users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from '../mail/mail.service';
@@ -12,7 +17,7 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  
+  // SIGNUP
   async signup(email: string, password: string) {
     const user = await this.usersService.create({ email, password });
 
@@ -26,7 +31,7 @@ export class AuthService {
     };
   }
 
- 
+  // LOGIN
   async login(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
 
@@ -46,7 +51,7 @@ export class AuthService {
     };
   }
 
-  
+  // FORGOT PASSWORD (SEND OTP)
   async forgotPassword(email: string) {
     const user = await this.usersService.findByEmail(email);
 
@@ -74,6 +79,7 @@ export class AuthService {
     };
   }
 
+  // RESET PASSWORD (WITH OTP)
   async resetPassword(email: string, otp: string, newPassword: string) {
     if (!newPassword) {
       throw new BadRequestException('New password is required');
@@ -87,7 +93,11 @@ export class AuthService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    if (!user.resetOtp || !user.resetOtpExpires || user.resetOtpExpires < new Date()) {
+    if (
+      !user.resetOtp ||
+      !user.resetOtpExpires ||
+      user.resetOtpExpires < new Date()
+    ) {
       throw new UnauthorizedException('OTP expired or invalid');
     }
 
@@ -107,27 +117,43 @@ export class AuthService {
     };
   }
 
-  
+  // CHANGE PASSWORD (SECURE VERSION)
   async changePassword(
     userId: string,
     newPassword: string,
-    oldPassword?: string, // optional now
+    oldPassword: string,
   ) {
+    
     if (!newPassword) {
       throw new BadRequestException('New password is required');
     }
 
+    if (!oldPassword) {
+      throw new BadRequestException('Old password is required');
+    }
+
+   
     const user = await this.usersService.findByIdWithPassword(userId);
 
     if (!user) throw new NotFoundException('User not found');
 
-    
-    if (oldPassword) {
-      const match = await bcrypt.compare(oldPassword, user.password);
-      if (!match) throw new UnauthorizedException('Old password incorrect');
+    // Verify old password
+    const match = await bcrypt.compare(oldPassword, user.password);
+
+    if (!match) {
+      throw new UnauthorizedException('Old password is incorrect');
     }
 
     
+    const samePassword = await bcrypt.compare(newPassword, user.password);
+
+    if (samePassword) {
+      throw new BadRequestException(
+        'New password must be different from old password',
+      );
+    }
+
+    // Hash and save new password
     user.password = await bcrypt.hash(newPassword, 10);
     await this.usersService.save(user);
 

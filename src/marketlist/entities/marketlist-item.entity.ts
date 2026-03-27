@@ -12,14 +12,11 @@ export class MarketListItem {
   @Column()
   quantity: number;
 
-  @Column()
-  unit: string;
-
   @Column('decimal')
   price: number;
 
   @ManyToOne(() => MarketList, (list) => list.items, {
     onDelete: 'CASCADE',
   })
-  list: MarketList;
+  marketList: MarketList;
 }
