@@ -15,9 +15,18 @@ export class MarketList {
   @Column({ default: false })
   stealthMode: boolean;
 
-  @Column({ type: 'decimal', default: 0 })
+  @Column({
+    type: 'decimal',
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => Number(value),
+    },
+  })
   estimatedTotal: number;
 
-  @OneToMany(() => MarketListItem, (item) => item.marketList, { cascade: true })
+  @OneToMany(() => MarketListItem, (item) => item.marketList, {
+    cascade: true,
+  })
   items: MarketListItem[];
 }

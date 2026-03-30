@@ -1,4 +1,5 @@
 export class CreateItemDto {
+  [x: string]: any;
   name: string;
   quantity: number;
   price: number;

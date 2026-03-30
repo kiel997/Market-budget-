@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Signup & Login
+
 export const authSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z
@@ -11,19 +11,18 @@ export const authSchema = z.object({
     .regex(/[0-9]/, 'Must contain a number'),
 });
 
-// Forgot password
 export const emailSchema = z.object({
   email: z.string().email('Invalid email format'),
 });
 
-// Reset password
+
 export const resetPasswordSchema = z.object({
   email: z.string().email(),
   otp: z.string().min(6, 'OTP must be 6 digits'),
   newPassword: z.string().min(6),
 });
 
-// Change password
+
 export const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, 'Old password is required'),
   newPassword: z
