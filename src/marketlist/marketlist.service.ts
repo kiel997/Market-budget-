@@ -1,6 +1,6 @@
-import {Injectable,NotFoundException, BadRequestException,} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { isUUID } from 'class-validator';
 import { MarketList } from './entities/marketlist-list.entity';
 import { MarketListItem } from './entities/marketlist-item.entity';
@@ -16,16 +16,13 @@ export class MarketlistService {
     private readonly itemRepo: Repository<MarketListItem>,
   ) {}
 
-  
+  // ✅ CREATE MARKET LIST
   async create(data: CreateMarketlistDto) {
     if (!data.items || data.items.length === 0) {
       throw new BadRequestException('Items are required');
     }
 
-    const total = data.items.reduce(
-      (sum, item) => sum + Number(item.price),
-      0,
-    );
+    const total = data.items.reduce((sum, item) => sum + Number(item.price), 0);
 
     const list = this.marketListRepo.create({
       name: data.name,
@@ -47,18 +44,17 @@ export class MarketlistService {
     );
 
     await this.itemRepo.save(items);
-
     savedList.items = items;
 
     return savedList;
   }
 
-  // ✅ GET ALL
+  // ✅ GET ALL MARKET LISTS
   async findAll() {
     return this.marketListRepo.find({ relations: ['items'] });
   }
 
-  // ✅ GET ONE
+  // ✅ GET ONE MARKET LIST
   async findOne(id: string) {
     if (!isUUID(id)) throw new BadRequestException('Invalid UUID');
 
@@ -72,7 +68,7 @@ export class MarketlistService {
     return list;
   }
 
-  // ✅ UPDATE
+  // ✅ UPDATE MARKET LIST
   async update(id: string, data: Partial<CreateMarketlistDto>) {
     if (!isUUID(id)) throw new BadRequestException('Invalid UUID');
 
@@ -91,6 +87,7 @@ export class MarketlistService {
     }
 
     if (data.items) {
+      // Remove old items
       await this.itemRepo.delete({ marketList: list });
 
       const items = this.itemRepo.create(
@@ -121,7 +118,7 @@ export class MarketlistService {
     return this.marketListRepo.save(list);
   }
 
-  // ✅ DELETE
+  // ✅ DELETE MARKET LIST
   async delete(id: string) {
     if (!isUUID(id)) throw new BadRequestException('Invalid UUID');
 
@@ -132,39 +129,5 @@ export class MarketlistService {
     }
 
     return { message: 'Deleted successfully' };
-  }
-
-  
-  async combine(ids: string[]) {
-    const lists = await this.marketListRepo.find({
-      where: { id: In(ids) },
-      relations: ['items'],
-    });
-
-    if (!lists.length) {
-      throw new NotFoundException('No lists found');
-    }
-
-    const allItems = lists.flatMap(list => list.items);
-
-    const grouped = allItems.reduce((acc, item) => {
-      const category = item.category || 'Other';
-
-      if (!acc[category]) acc[category] = [];
-
-      acc[category].push(item);
-
-      return acc;
-    }, {} as Record<string, MarketListItem[]>);
-
-    const total = allItems.reduce(
-      (sum, item) => sum + Number(item.price),
-      0,
-    );
-
-    return {
-      groupedItems: grouped,
-      total,
-    };
   }
 }

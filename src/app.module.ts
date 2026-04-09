@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './Users/users.module';
 import { MailModule } from './mail/mail.module';
 import { MarketlistModule } from './marketlist/marketlist.module';
+import { MarketNoteModule } from './market-note/market-note.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { MarketlistModule } from './marketlist/marketlist.module';
     AuthModule,
     UsersModule,
     MailModule,
-    MarketlistModule, 
+    MarketlistModule,
+    MarketNoteModule, 
   ],
   controllers: [AppController], 
   providers: [AppService], 

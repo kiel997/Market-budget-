@@ -5,13 +5,13 @@ import { Exclude } from 'class-transformer';
 @Entity()
 export class MarketListItem {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column()
-  quantity: number;
+  quantity!: number;
 
   @Column({
     type: 'decimal',
@@ -20,14 +20,14 @@ export class MarketListItem {
       from: (value: string) => Number(value),
     },
   })
-  price: number;
+  price!: number;
 
   @Column({ nullable: true })
-  category: string;
+  category?: string;
 
   @ManyToOne(() => MarketList, (list) => list.items, {
     onDelete: 'CASCADE',
   })
   @Exclude()
-  marketList: MarketList;
+  marketList!: MarketList;
 }

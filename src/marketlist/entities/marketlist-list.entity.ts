@@ -1,32 +1,46 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
 import { MarketListItem } from './marketlist-item.entity';
 
-@Entity()
+@Entity('market_list') // ✅ good practice
 export class MarketList {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
-  template: string;
+  template!: string;
 
   @Column({ default: false })
-  stealthMode: boolean;
+  stealthMode!: boolean; // 
 
-  @Column({
-    type: 'decimal',
-    default: 0,
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => Number(value),
+  @Column({ type: 'decimal', default: 0 })
+  estimatedTotal!: number;
+
+  @OneToMany(
+    () => MarketListItem,
+    (item) => item.marketList,
+    {
+      cascade: true,
+      eager: true, // ✅ auto load items
     },
-  })
-  estimatedTotal: number;
+  )
+  items!: MarketListItem[];
 
-  @OneToMany(() => MarketListItem, (item) => item.marketList, {
-    cascade: true,
-  })
-  items: MarketListItem[];
+  // ✅ created timestamp
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt!: Date;
+
+  // ✅ updated timestamp (important)
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt!: Date;
 }
