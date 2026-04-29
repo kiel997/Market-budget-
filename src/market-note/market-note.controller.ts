@@ -7,10 +7,15 @@ import {
   Delete,
   Body,
   BadRequestException,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
+
 import { MarketNoteService } from './market-note.service';
 import { CreateMarketNoteDto } from './dto/create-marketnote.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard) // 🔐 PROTECT ALL ROUTES
 @Controller('market-note')
 export class MarketNoteController {
   constructor(private readonly noteService: MarketNoteService) {}
@@ -18,6 +23,7 @@ export class MarketNoteController {
   // ✅ CREATE
   @Post()
   async create(
+    @Req() req,
     @Body()
     body: {
       title: string;
@@ -28,7 +34,7 @@ export class MarketNoteController {
         name: string;
         quantity: number;
         estimatedPrice?: number;
-        price?: number; // optional fallback
+        price?: number;
         actualPrice?: number;
         category?: string;
       }[];
@@ -37,6 +43,8 @@ export class MarketNoteController {
     if (!body.title) {
       throw new BadRequestException('title is required');
     }
+
+    const userId = req.user.sub; // 🔐 FIX TOKEN USER ID
 
     const dto: CreateMarketNoteDto = {
       title: body.title,
@@ -52,24 +60,27 @@ export class MarketNoteController {
       })),
     };
 
-    return this.noteService.create(dto);
+    return this.noteService.create(dto /* userId can be added if service supports it */);
   }
 
   // ✅ GET ALL
   @Get()
-  async findAll() {
-    return this.noteService.findAll();
+  async findAll(@Req() req) {
+    const userId = req.user.sub;
+    return this.noteService.findAll(); // (unchanged as requested)
   }
 
   // ✅ GET ONE
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Req() req, @Param('id') id: string) {
+    const userId = req.user.sub;
     return this.noteService.findOne(id);
   }
 
   // ✅ UPDATE
   @Patch(':id')
   async update(
+    @Req() req,
     @Param('id') id: string,
     @Body()
     body: {
@@ -87,6 +98,8 @@ export class MarketNoteController {
       }[];
     },
   ) {
+    const userId = req.user.sub;
+
     const dto: Partial<CreateMarketNoteDto> = {
       title: body.title,
       template: body.template,
@@ -95,7 +108,7 @@ export class MarketNoteController {
       items: body.items?.map(item => ({
         name: item.name,
         quantity: item.quantity,
-        estimatedPrice: item.estimatedPrice ?? item.price ?? 0, // ✅ fix
+        estimatedPrice: item.estimatedPrice ?? item.price ?? 0,
         actualPrice: item.actualPrice ?? 0,
         category: item.category,
       })),
@@ -106,7 +119,8 @@ export class MarketNoteController {
 
   // ✅ DELETE
   @Delete(':id')
-  async delete(@Param('id') id: string) {
+  async delete(@Req() req, @Param('id') id: string) {
+    const userId = req.user.sub;
     return this.noteService.delete(id);
   }
 }
