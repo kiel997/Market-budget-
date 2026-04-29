@@ -2,14 +2,17 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 
+import { User } from '../../Users/entity/user.entity';
 import { MarketListItem } from './marketlist-item.entity';
 
-@Entity('market_list') // ✅ good practice
+@Entity('market_list')
 export class MarketList {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -17,30 +20,30 @@ export class MarketList {
   @Column()
   name!: string;
 
-  @Column({ nullable: true })
+  @Column()
   template!: string;
 
   @Column({ default: false })
-  stealthMode!: boolean; // 
+  stealthMode!: boolean;
 
-  @Column({ type: 'decimal', default: 0 })
+  @Column({ type: 'float', default: 0 })
   estimatedTotal!: number;
 
-  @OneToMany(
-    () => MarketListItem,
-    (item) => item.marketList,
-    {
-      cascade: true,
-      eager: true, // ✅ auto load items
-    },
-  )
+  // ✅ ONLY RELATION (NO manual userId column)
+  @ManyToOne(() => User, (user) => user.marketLists, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'userId' })
+  user!: User;
+
+  @OneToMany(() => MarketListItem, (item) => item.marketList, {
+    cascade: true,
+  })
   items!: MarketListItem[];
 
-  // ✅ created timestamp
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  // ✅ updated timestamp (important)
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn()
   updatedAt!: Date;
 }

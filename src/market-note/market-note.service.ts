@@ -2,7 +2,6 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MarketNote } from './entities/marketnote.entity';
-import { MarketListItem } from './entities/marketnote-item.entity';
 import { CreateMarketNoteDto } from './dto/create-marketnote.dto';
 
 @Injectable()
@@ -12,36 +11,44 @@ export class MarketNoteService {
     private readonly noteRepo: Repository<MarketNote>,
   ) {}
 
-  // ✅ CREATE (FIXED)
+  // ✅ CREATE
   async create(dto: CreateMarketNoteDto) {
     if (!dto.items || dto.items.length === 0) {
       throw new BadRequestException('Items are required');
     }
 
+    // ✅ calculate total (price * quantity)
     const total = dto.items.reduce(
-      (sum, item) => sum + Number(item.price),
+      (sum, item) => sum + (Number(item.estimatedPrice) * item.quantity),
       0,
     );
+
     const note = this.noteRepo.create({
-      name: dto.name,
+      title: dto.title,
       template: dto.template,
       stealthMode: dto.stealthMode ?? false,
-      marketType: dto.marketType,
+      marketName: dto.marketName,
       estimatedTotal: total,
-      items: dto.items,
+      items: dto.items.map(item => ({
+        ...item,
+        actualPrice: item.actualPrice ?? 0, // ✅ default
+      })),
     });
 
-    const savedNote = await this.noteRepo.save(note);
+    const saved = await this.noteRepo.save(note);
 
-    // ✅ Reload for clean response
     return this.noteRepo.findOne({
-      where: { id: savedNote.id },
+      where: { id: saved.id },
       relations: ['items'],
     });
   }
+
+  // ✅ GET ALL
   async findAll() {
     return this.noteRepo.find({ relations: ['items'] });
   }
+
+  // ✅ GET ONE
   async findOne(id: string) {
     const note = await this.noteRepo.findOne({
       where: { id },
@@ -52,6 +59,8 @@ export class MarketNoteService {
 
     return note;
   }
+
+  // ✅ UPDATE
   async update(id: string, dto: Partial<CreateMarketNoteDto>) {
     const note = await this.noteRepo.findOne({
       where: { id },
@@ -62,33 +71,19 @@ export class MarketNoteService {
 
     let hasChanges = false;
 
-    if (dto.name) {
-      note.name = dto.name;
-      hasChanges = true;
-    }
-
-    if (dto.template !== undefined) {
-      note.template = dto.template;
-      hasChanges = true;
-    }
-
-    if (dto.stealthMode !== undefined) {
-      note.stealthMode = dto.stealthMode;
-      hasChanges = true;
-    }
-
-    if (dto.marketType !== undefined) {
-      note.marketType = dto.marketType;
-      hasChanges = true;
-    }
+    if (dto.title) { note.title = dto.title; hasChanges = true; }
+    if (dto.template !== undefined) { note.template = dto.template; hasChanges = true; }
+    if (dto.stealthMode !== undefined) { note.stealthMode = dto.stealthMode; hasChanges = true; }
+    if (dto.marketName !== undefined) { note.marketName = dto.marketName; hasChanges = true; }
 
     if (dto.items && dto.items.length > 0) {
       note.items = dto.items.map(item => ({
         ...item,
+        actualPrice: item.actualPrice ?? 0,
       })) as any;
 
       note.estimatedTotal = dto.items.reduce(
-        (sum, item) => sum + Number(item.price),
+        (sum, item) => sum + (Number(item.estimatedPrice) * item.quantity),
         0,
       );
 
@@ -100,6 +95,7 @@ export class MarketNoteService {
     }
 
     const updated = await this.noteRepo.save(note);
+
     return this.noteRepo.findOne({
       where: { id: updated.id },
       relations: ['items'],

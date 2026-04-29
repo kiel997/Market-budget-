@@ -1,12 +1,14 @@
 export class CreateMarketNoteDto {
-  name!: string; // maps to noteName
+  title!: string; // ✅ renamed
   template?: string;
   stealthMode?: boolean;
-  marketType?: string; // type of market
+  marketName?: string; // ✅ renamed
+
   items!: {
     name: string;
     quantity: number;
-    price: number;
+    estimatedPrice: number; // ✅ renamed
+    actualPrice?: number; // ✅ optional
     category?: string;
   }[];
 }

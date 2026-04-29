@@ -17,7 +17,7 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  // SIGNUP
+  // ✅ SIGNUP
   async signup(email: string, password: string) {
     const user = await this.usersService.create({ email, password });
 
@@ -31,15 +31,15 @@ export class AuthService {
     };
   }
 
-  // LOGIN
+  // ✅ LOGIN
   async login(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const match = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
-    if (!match) throw new UnauthorizedException('Invalid credentials');
+    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
     const payload = {
       sub: user.id,
@@ -47,11 +47,12 @@ export class AuthService {
     };
 
     return {
-      access_token: this.jwtService.sign(payload),
+      message: 'Login successful',
+      access_token: await this.jwtService.signAsync(payload),
     };
   }
 
-  // FORGOT PASSWORD (SEND OTP)
+  // ✅ FORGOT PASSWORD (OTP)
   async forgotPassword(email: string) {
     const user = await this.usersService.findByEmail(email);
 
@@ -79,34 +80,30 @@ export class AuthService {
     };
   }
 
-  // RESET PASSWORD (WITH OTP)
+  // ✅ RESET PASSWORD
   async resetPassword(email: string, otp: string, newPassword: string) {
-    if (!newPassword) {
-      throw new BadRequestException('New password is required');
-    }
-
-    if (!otp) {
-      throw new BadRequestException('OTP is required');
-    }
+    if (!otp) throw new BadRequestException('OTP is required');
+    if (!newPassword) throw new BadRequestException('New password is required');
 
     const user = await this.usersService.findByEmail(email);
 
     if (!user) throw new NotFoundException('User not found');
 
-    if (
-      !user.resetOtp ||
-      !user.resetOtpExpires ||
-      user.resetOtpExpires < new Date()
-    ) {
-      throw new UnauthorizedException('OTP expired or invalid');
+    if (!user.resetOtp || !user.resetOtpExpires) {
+      throw new UnauthorizedException('OTP invalid or expired');
     }
 
-    const valid = await bcrypt.compare(otp, user.resetOtp);
+    if (user.resetOtpExpires < new Date()) {
+      throw new UnauthorizedException('OTP expired');
+    }
 
-    if (!valid) throw new UnauthorizedException('Invalid OTP');
+    const isValidOtp = await bcrypt.compare(otp, user.resetOtp);
+
+    if (!isValidOtp) {
+      throw new UnauthorizedException('Invalid OTP');
+    }
 
     user.password = await bcrypt.hash(newPassword, 10);
-
     user.resetOtp = undefined;
     user.resetOtpExpires = undefined;
 
@@ -117,44 +114,31 @@ export class AuthService {
     };
   }
 
-  // CHANGE PASSWORD (SECURE VERSION)
-  async changePassword(
-    userId: string,
-    newPassword: string,
-    oldPassword: string,
-  ) {
-    
-    if (!newPassword) {
-      throw new BadRequestException('New password is required');
-    }
+  // ✅ CHANGE PASSWORD
+  async changePassword(userId: string, oldPassword: string, newPassword: string) {
+    if (!oldPassword) throw new BadRequestException('Old password is required');
+    if (!newPassword) throw new BadRequestException('New password is required');
 
-    if (!oldPassword) {
-      throw new BadRequestException('Old password is required');
-    }
-
-   
     const user = await this.usersService.findByIdWithPassword(userId);
 
     if (!user) throw new NotFoundException('User not found');
 
-    // Verify old password
-    const match = await bcrypt.compare(oldPassword, user.password);
+    const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
 
-    if (!match) {
+    if (!isOldPasswordValid) {
       throw new UnauthorizedException('Old password is incorrect');
     }
 
-    
-    const samePassword = await bcrypt.compare(newPassword, user.password);
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
 
-    if (samePassword) {
+    if (isSamePassword) {
       throw new BadRequestException(
         'New password must be different from old password',
       );
     }
 
-    // Hash and save new password
     user.password = await bcrypt.hash(newPassword, 10);
+
     await this.usersService.save(user);
 
     return {

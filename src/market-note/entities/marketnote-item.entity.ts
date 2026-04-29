@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { MarketNote } from './marketnote.entity';
 
 @Entity()
-export class MarketListItem {
+export class MarketNoteItem {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -13,11 +13,16 @@ export class MarketListItem {
   quantity!: number;
 
   @Column({ type: 'decimal' })
-  price!: number;
+  estimatedPrice!: number; // ✅ renamed
+
+  @Column({ type: 'decimal', default: 0 })
+  actualPrice!: number; // ✅ new field
 
   @Column({ nullable: true })
   category!: string;
 
-  @ManyToOne(() => MarketNote, note => note.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => MarketNote, note => note.items, {
+    onDelete: 'CASCADE',
+  })
   marketNote!: MarketNote;
 }

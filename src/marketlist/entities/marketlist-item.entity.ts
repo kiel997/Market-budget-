@@ -1,6 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+} from 'typeorm';
+
 import { MarketList } from './marketlist-list.entity';
-import { Exclude } from 'class-transformer';
 
 @Entity()
 export class MarketListItem {
@@ -13,13 +18,7 @@ export class MarketListItem {
   @Column()
   quantity!: number;
 
-  @Column({
-    type: 'decimal',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => Number(value),
-    },
-  })
+  @Column('float')
   price!: number;
 
   @Column({ nullable: true })
@@ -28,6 +27,5 @@ export class MarketListItem {
   @ManyToOne(() => MarketList, (list) => list.items, {
     onDelete: 'CASCADE',
   })
-  @Exclude()
   marketList!: MarketList;
 }

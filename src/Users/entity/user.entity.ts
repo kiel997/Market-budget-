@@ -1,24 +1,32 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  OneToMany,
+} from 'typeorm';
+import { MarketList } from '../../marketlist/entities/marketlist-list.entity';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column({ select: false })
-  password: string;
+  password!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
-
-  // OTP / reset password fields
- @Column({ nullable: true })
- resetOtp?: string;
+  createdAt!: Date;
 
   @Column({ nullable: true })
- resetOtpExpires?: Date;
+  resetOtp?: string;
 
+  @Column({ nullable: true })
+  resetOtpExpires?: Date;
+
+  @OneToMany(() => MarketList, (list) => list.user)
+  marketLists!: MarketList[];
 }

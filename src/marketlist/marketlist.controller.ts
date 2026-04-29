@@ -4,52 +4,48 @@ import {
   Get,
   Patch,
   Delete,
-  Param,
+  Req,
   Body,
+  Param,
+  UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+
 import { MarketlistService } from './marketlist.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateMarketlistDto } from './dto/create-marketlist.dto';
 import { isUUID } from 'class-validator';
 
 @Controller('marketlists')
+@UseGuards(JwtAuthGuard)
 export class MarketlistController {
-  constructor(private readonly marketlistService: MarketlistService) {}
+  constructor(private readonly service: MarketlistService) {}
 
-  // ✅ CREATE MARKET LIST
   @Post()
-  async create(@Body() data: CreateMarketlistDto) {
-    return this.marketlistService.create(data);
+  create(@Req() req, @Body() dto: CreateMarketlistDto) {
+    return this.service.create(req.user.userId, dto);
   }
 
-  // ✅ GET ALL MARKET LISTS
   @Get()
-  async findAll() {
-    return this.marketlistService.findAll();
+  findAll(@Req() req) {
+    return this.service.findAll(req.user.userId);
   }
 
-  // ✅ GET ONE MARKET LIST
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    if (!isUUID(id)) throw new BadRequestException('Invalid UUID');
-    return this.marketlistService.findOne(id);
+  findOne(@Req() req, @Param('id') id: string) {
+    if (!isUUID(id)) throw new BadRequestException('Invalid ID');
+    return this.service.findOne(req.user.userId, id);
   }
 
-  // ✅ UPDATE MARKET LIST
   @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() data: Partial<CreateMarketlistDto>,
-  ) {
-    if (!isUUID(id)) throw new BadRequestException('Invalid UUID');
-    return this.marketlistService.update(id, data);
+  update(@Req() req, @Param('id') id: string, @Body() dto: any) {
+    if (!isUUID(id)) throw new BadRequestException('Invalid ID');
+    return this.service.update(req.user.userId, id, dto);
   }
 
-  // ✅ DELETE MARKET LIST
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    if (!isUUID(id)) throw new BadRequestException('Invalid UUID');
-    return this.marketlistService.delete(id);
+  delete(@Req() req, @Param('id') id: string) {
+    if (!isUUID(id)) throw new BadRequestException('Invalid ID');
+    return this.service.delete(req.user.userId, id);
   }
-
 }

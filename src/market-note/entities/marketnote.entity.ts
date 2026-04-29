@@ -1,28 +1,44 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { MarketListItem } from './marketnote-item.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { MarketNoteItem } from './marketnote-item.entity';
 
 @Entity()
 export class MarketNote {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
-  name!: string; // maps from noteName in body
+  @Column({ default: 'Untitled' }) // ✅ FIX: prevents DB crash
+  title!: string;
 
   @Column({ nullable: true })
-  template!: string;
+  template?: string;
 
   @Column({ default: false })
   stealthMode!: boolean;
 
   @Column({ nullable: true })
-  marketType!: string; // type of market
+  marketName?: string;
 
-  @Column({ type: 'decimal', default: 0 })
+  @Column({
+    type: 'decimal',
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => Number(value),
+    },
+  })
   estimatedTotal!: number;
 
-  @OneToMany(() => MarketListItem, item => item.marketNote, { cascade: true })
-  items!: MarketListItem[];
+  @OneToMany(() => MarketNoteItem, item => item.marketNote, {
+    cascade: true,
+  })
+  items!: MarketNoteItem[];
 
   @CreateDateColumn()
   createdAt!: Date;

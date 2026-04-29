@@ -3,10 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MarketNoteService } from './market-note.service';
 import { MarketNoteController } from './market-note.controller';
 import { MarketNote } from './entities/marketnote.entity';
-import { MarketListItem } from './entities/marketnote-item.entity';
+import { MarketNoteItem } from './entities/marketnote-item.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MarketNote, MarketListItem])],
+  imports: [TypeOrmModule.forFeature([MarketNote, MarketNoteItem])], 
   providers: [MarketNoteService],
   controllers: [MarketNoteController],
 })
